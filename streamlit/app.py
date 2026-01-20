@@ -67,8 +67,16 @@ def save_uploaded_file(uploaded_file):
     
 def reset_state():
     """상태 초기화 (처음으로 돌아가기)"""
+    if st.session_state['current_image_path'] and "/tmp/" in st.session_state['current_image_path']:
+        if os.path.exists(st.session_state['current_image_path']):
+            try:
+                os.remove(st.session_state['current_image_path'])
+            except:
+                pass
+            
     st.session_state['current_image_path'] = None
     st.session_state['current_image_obj'] = None
+    st.session_state['uploader_key'] += 1
     st.rerun()
     
 
@@ -77,7 +85,8 @@ if 'current_image_path' not in st.session_state:
     st.session_state['current_image_path'] = None
 if 'current_image_obj' not in st.session_state:
     st.session_state['current_image_obj'] = None
-
+if 'uploader_key' not in st.session_state:
+    st.session_state['uploader_key'] = 0
 
 # 메인 레이아웃
 st.title("🌿 Plant Pathology 2020 식물 병해 진단")
@@ -89,7 +98,10 @@ col_left, col_right = st.columns([1, 1], gap="large")
 # 이미지 입력 및 표시
 with col_left:
     st.subheader("1. 이미지 입력")
-    uploaded_file = st.file_uploader("이미지 파일 업로드", type=["jpg", "png", "jpeg"])
+    uploaded_file = st.file_uploader(
+        "이미지 파일 업로드", 
+        type=["jpg", "png", "jpeg"], 
+        key=f"uploader_{st.session_state['uploader_key']}")
 
     if uploaded_file is not None:
         temp_path = save_uploaded_file(uploaded_file)

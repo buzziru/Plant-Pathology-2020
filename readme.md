@@ -103,9 +103,17 @@ my-project/
 3.  **AI 추론 (Inference)**: `inference.py`에서 ONNX Runtime 세션을 통해 고속 추론을 수행합니다. 4가지 클래스에 대한 확률값을 계산합니다.
 4.  **결과 반환 및 시각화 (Visualization)**: 가장 높은 확률을 가진 상태를 진단 결과로 사용자 화면에 출력하며, 각 상태별 확신도(Confidence)를 그래프로 보여줍니다.
 
+![streamlit_app](image-1.png)
+
 ---
 
 ## 참고 자료 (References)
 
 *   **Technical Blog**: [캐글 Plant Pathology 2020를 정리하며: 지식 증류 전략](https://velog.io/@masew8/캐글-Plant-Pathology-2020를-정리하며-지식-증류-전략)
 *   **Dataset**: Kaggle Plant Pathology 2020 - FGVC7
+
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Framework](https://img.shields.io/badge/PyTorch_Lightning-2.0+-792EE5?logo=pytorch-lightning&logoColor=white)](https://www.pytorchlightning.ai/)
+[![Model](https://img.shields.io/badge/Model-ResNeSt101-FF6F00?logo=pytorch&logoColor=white)]()
+[![Deployment](https://img.shields.io/badge/Streamlit-Cloud-FF4B4B?logo=streamlit&logoColor=white)](https://share.streamlit.io/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)]()

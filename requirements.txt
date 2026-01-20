@@ -1,0 +1,30 @@
+# Core & Data Science
+numpy==1.26.4
+pandas==2.1.4
+matplotlib
+seaborn
+scikit-learn
+opencv-python
+
+# Deep Learning Frameworks
+torch==2.5.1
+torchvision
+torchmetrics
+lightning==2.6.0
+
+# Model Architecture & Augmentation
+timm==1.0.22
+albumentations==2.0.8
+ttach
+
+# Experiment Tracking
+wandb
+
+# Deployment & Optimization
+onnx
+onnxruntime
+gradio
+
+# Utilities
+python-dotenv
+ipynbname

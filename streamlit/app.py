@@ -27,12 +27,13 @@ st.markdown("""
 HF_API_URL = "https://ingyoun-plant-pathology-api.hf.space"
 
 # 샘플 이미지 경로 리스트
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SAMPLE_IMAGES = {
-    "Sample 1": "./samples/Test_0.jpg",
-    "Sample 2": "./samples/Test_1.jpg",
-    "Sample 3": "./samples/Test_2.jpg",
-    "Sample 4": "./samples/Test_3.jpg", 
-    "Sample 5": "./samples/Test_4.jpg", 
+    "Sample 1": os.path.join(BASE_DIR, "samples", "Test_0.jpg"),
+    "Sample 2": os.path.join(BASE_DIR, "samples", "Test_1.jpg"),
+    "Sample 3": os.path.join(BASE_DIR, "samples", "Test_2.jpg"),
+    "Sample 4": os.path.join(BASE_DIR, "samples", "Test_3.jpg"), 
+    "Sample 5": os.path.join(BASE_DIR, "samples", "Test_4.jpg"), 
 }
 
 

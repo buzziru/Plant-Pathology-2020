@@ -33,20 +33,36 @@
 Student 모델은 실제 정답 라벨(Hard Label)뿐만 아니라, Teacher 모델이 예측한 확률 분포(Soft Label)를 동시에 학습합니다. 이 과정에서 사용된 **Loss Function**은 다음과 같이 정의됩니다.
 
 $$
-L = \alpha L_{soft} + (1-\alpha) L_{hard}
+L = \alpha L_{hard} + (1-\alpha) L_{soft}
 $$
 
 여기서 각 항의 의미는 다음과 같습니다.
 
 *   $L_{soft}$: Teacher 모델과 Student 모델의 출력(Logits) 간의 불일치를 측정하는 손실 함수(KL Divergence 사용). Teacher가 바라보는 클래스 간의 관계를 학습합니다.
 *   $L_{hard}$: Student 모델의 예측값과 실제 정답(Ground Truth) 간의 Cross-Entropy Loss.
-*   $\alpha$: 두 손실 함수 간의 가중치를 조절하는 하이퍼파라미터(GT의 비율)
+*   $\alpha$: 실제 정답 라벨(Ground Truth)에 대한 Cross-Entropy Loss 비중을 조절하는 하이퍼파라미터
 
 이 수식을 통해 Student 모델은 정답을 맞추는 것뿐만 아니라, Teacher 모델이 갖고 있는 '오답에 대한 정보'까지 함께 학습하여 더 강건한 결정 경계를 형성하게 됩니다.
 
 > **Performance Boost**: 특히 본 프로젝트에서는 **ConvNeXt**를 Teacher 모델로, **ResNeSt**를 Student 모델로 설정하여 실험한 결과, 단일 모델 학습 대비 폭발적인 성능 향상을 확인하였습니다.
 
-### 2.3 Optimization: ONNX Runtime
+### 2.3 Performance Improvement: 성능 개선 과정
+
+본 프로젝트는 단순한 아키텍처 변경이 아니라, 검증 전략과 데이터 정제, 지식 증류 방식, 모델 조합을 단계적으로 개선하며 성능을 끌어올렸습니다.
+
+| 단계 | 주요 전략 | 결과 |
+| --- | --- | --- |
+| 초기 검증 | EfficientNet-B6 기반 실험 | 로컬 CV 0.980+ 대비 리더보드 0.960 수준으로 괴리 확인 |
+| 데이터 정제 | pHash, CNN Embedding 기반 유사 이미지 탐지 및 Fold 재구성 | Train/Validation 간 유사 이미지 누수 완화 |
+| 라벨 정리 | 유사 이미지 간 라벨 충돌 사례 확인 및 모델 예측 기반 보정 | 검증 지표 신뢰도 개선 |
+| ResNeSt 도입 | EfficientNet-B6 Teacher → ResNeSt101e Student 지식 증류 | 0.965 → 0.9725, 앙상블 시 0.973 |
+| Logits 기반 KD | 확률값의 로그 변환 대신 Teacher Logits 직접 활용 | 더 정밀한 Dark Knowledge 전달 기반 마련 |
+| ConvNeXt Teacher 도입 | ConvNeXt Ensemble Teacher → ResNeSt Student 지식 증류 | 최고 0.977 달성 |
+| 최종 결과 | Knowledge Distillation, Calibration, Top-k Averaging, FoldAlphaCallback 적용 | Kaggle 리더보드 18위 |
+
+상세한 실험 과정과 의사결정은 [기술 블로그](https://velog.io/@masew8/캐글-Plant-Pathology-2020를-정리하며-지식-증류-전략)에 정리되어 있습니다.
+
+### 2.4 Optimization: ONNX Runtime
 
 학습된 PyTorch 모델을 배포 단계에서 그대로 사용하지 않고, **ONNX** 포맷으로 변환하여 최적화를 수행하였습니다.
 

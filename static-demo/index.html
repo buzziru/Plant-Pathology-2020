@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>식물 잎 병해 진단 — 인터랙티브 데모</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.18/index.min.css" />
+<style>
+  :root{
+    --bg:#010102; --surface:#0f1011; --elevated:#141516; --deep:#18191a;
+    --border:#23252a; --border-mid:#34343a;
+    --fg:#f7f8f8; --fg-2:#d0d6e0; --muted:#8a8f98; --tertiary:#62666d;
+    --accent:#5e6ad2; --accent-light:#828fff;
+    --good:#4cc38a;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);}
+  body{
+    font-family:'Pretendard',system-ui,-apple-system,sans-serif;
+    color:var(--fg); -webkit-font-smoothing:antialiased;
+    line-height:1.6; letter-spacing:-0.01em;
+  }
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
+  .demo{max-width:920px;margin:0 auto;padding:26px 22px 30px;}
+
+  .demo-header{margin-bottom:20px;}
+  .demo-title{font-size:21px;font-weight:600;letter-spacing:-0.025em;margin:0 0 6px;}
+  .demo-sub{font-size:13.5px;color:var(--muted);margin:0;max-width:64ch;word-break:keep-all;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start;}
+  @media(max-width:720px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:16px;padding:18px;
+  }
+  .panel-label{
+    font-size:11px;letter-spacing:.14em;color:var(--tertiary);
+    text-transform:uppercase;margin:0 0 12px;
+  }
+
+  /* left — image */
+  .preview{
+    width:100%;aspect-ratio:3/2;border-radius:12px;overflow:hidden;
+    background:var(--deep);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .preview img{width:100%;height:100%;object-fit:cover;display:block;}
+  .preview-cap{font-size:12px;color:var(--tertiary);margin:8px 2px 0;}
+
+  .gallery{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:14px;}
+  .thumb{
+    position:relative;aspect-ratio:1/1;border-radius:8px;overflow:hidden;
+    border:1px solid var(--border);cursor:pointer;padding:0;background:none;
+    transition:border-color .15s,transform .15s;
+  }
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .thumb:hover{transform:translateY(-2px);border-color:var(--border-mid);}
+  .thumb.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
+
+  .upload{margin-top:14px;}
+  .upload input{display:none;}
+  .upload-btn{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    padding:11px;border-radius:8px;cursor:pointer;
+    background:var(--elevated);border:1px solid var(--border-mid);
+    color:var(--fg-2);font-size:13px;font-family:inherit;
+    transition:background .15s,color .15s,border-color .15s;
+  }
+  .upload-btn:hover{background:var(--deep);color:var(--fg);border-color:var(--accent);}
+
+  /* right — result */
+  .metric{
+    background:var(--elevated);border:1px solid var(--border);
+    border-radius:12px;padding:16px 18px;margin-bottom:18px;
+  }
+  .metric-label{font-size:11px;letter-spacing:.12em;color:var(--tertiary);text-transform:uppercase;margin:0 0 8px;}
+  .metric-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+  .metric-value{font-size:28px;font-weight:600;letter-spacing:-0.03em;line-height:1;}
+  .metric-ko{font-size:13px;color:var(--muted);}
+  .metric-delta{margin-left:auto;font-size:15px;color:var(--good);font-weight:500;}
+  .metric-delta::before{content:"▲ ";font-size:11px;}
+
+  .bars-label{font-size:12px;letter-spacing:.1em;color:var(--tertiary);text-transform:uppercase;margin:0 0 12px;}
+  .bar{margin-bottom:13px;}
+  .bar:last-child{margin-bottom:0;}
+  .bar-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;font-size:13px;}
+  .bar-name{color:var(--fg-2);}
+  .bar-name .ko{color:var(--tertiary);font-size:11.5px;margin-left:6px;}
+  .bar-pct{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12.5px;}
+  .bar-track{height:7px;border-radius:9999px;background:var(--deep);overflow:hidden;}
+  .bar-fill{height:100%;border-radius:9999px;background:var(--border-mid);transition:width .5s cubic-bezier(.2,.7,.3,1);}
+  .bar.top .bar-name{color:var(--fg);font-weight:500;}
+  .bar.top .bar-fill{background:var(--accent);}
+  .bar.top .bar-pct{color:var(--accent-light);}
+
+  .status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:9px;padding:6px 2px;}
+  .spinner{
+    width:15px;height:15px;border-radius:50%;
+    border:2px solid var(--border-mid);border-top-color:var(--accent);
+    animation:spin .7s linear infinite;flex:none;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .err{color:#e5704f;font-size:12.5px;line-height:1.55;margin-top:8px;}
+
+  .foot{margin-top:22px;font-size:11.5px;color:var(--tertiary);line-height:1.6;}
+  .foot b{color:var(--muted);font-weight:500;}
+</style>
+</head>
+<body>
+<div class="demo">
+  <div class="demo-header">
+    <h1 class="demo-title">🌿 식물 잎 병해 진단</h1>
+    <p class="demo-sub">사과나무 잎 이미지를 4개 병해 클래스로 분류합니다. 아래 샘플을 누르면 즉시 결과가 표시되고,<br>직접 이미지를 올리면 ResNeSt101e 모델(ONNX)이 실시간으로 추론합니다 — 모델이 슬립 상태면 첫 호출에 최대 1분이 걸릴 수 있습니다.</p>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT -->
+    <div class="panel">
+      <p class="panel-label">1 · 이미지 입력</p>
+      <div class="preview">
+        <img id="preview-img" src="samples/0.jpg" alt="분석 대상 잎 이미지" />
+      </div>
+      <p class="preview-cap mono" id="preview-cap">sample · apple leaf</p>
+
+      <div class="gallery" id="gallery"></div>
+
+      <label class="upload">
+        <input type="file" id="file-input" accept="image/png,image/jpeg,image/jpg" />
+        <span class="upload-btn">⬆ 내 이미지로 진단하기</span>
+      </label>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="panel">
+      <p class="panel-label">2 · AI 진단 결과</p>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <p class="foot">
+    <b>모델</b> ResNeSt101e · 이종 지식 증류(ConvNeXt→ResNeSt) · <b>데이터</b> Kaggle Plant Pathology 2020 (FGVC7) · ROC-AUC 0.977<br />
+    샘플 결과는 사전 계산값이며, 업로드 추론은 Hugging Face Space에서 실행됩니다.
+  </p>
+</div>
+
+<script type="module">
+import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/+esm";
+
+const API = "https://ingyoun-plant-pathology-api.hf.space/";
+
+const CLASS_KO = {
+  "Healthy": "건강",
+  "Multiple Diseases": "복합 병해",
+  "Rust": "녹병",
+  "Scab": "검은별무늬병",
+};
+
+// 5개 샘플의 사전 계산 결과 (HF API 실측값)
+const SAMPLES = [
+  { src:"samples/0.jpg", conf:[
+    {label:"Rust",confidence:0.9835}, {label:"Multiple Diseases",confidence:0.0115},
+    {label:"Healthy",confidence:0.0026}, {label:"Scab",confidence:0.0024} ] },
+  { src:"samples/1.jpg", conf:[
+    {label:"Rust",confidence:0.9858}, {label:"Multiple Diseases",confidence:0.0090},
+    {label:"Scab",confidence:0.0031}, {label:"Healthy",confidence:0.0021} ] },
+  { src:"samples/2.jpg", conf:[
+    {label:"Scab",confidence:0.9760}, {label:"Multiple Diseases",confidence:0.0089},
+    {label:"Healthy",confidence:0.0081}, {label:"Rust",confidence:0.0070} ] },
+  { src:"samples/3.jpg", conf:[
+    {label:"Healthy",confidence:0.9845}, {label:"Rust",confidence:0.0080},
+    {label:"Scab",confidence:0.0039}, {label:"Multiple Diseases",confidence:0.0036} ] },
+  { src:"samples/4.jpg", conf:[
+    {label:"Rust",confidence:0.9858}, {label:"Multiple Diseases",confidence:0.0088},
+    {label:"Scab",confidence:0.0032}, {label:"Healthy",confidence:0.0023} ] },
+];
+
+const $ = (id) => document.getElementById(id);
+const previewImg = $("preview-img");
+const previewCap = $("preview-cap");
+const resultEl = $("result");
+const galleryEl = $("gallery");
+
+function pct(x){ return (x*100).toFixed(1) + "%"; }
+
+function renderResult(conf){
+  const sorted = [...conf].sort((a,b)=>b.confidence-a.confidence);
+  const top = sorted[0];
+  const bars = sorted.map((c,i)=>`
+    <div class="bar ${i===0?'top':''}">
+      <div class="bar-head">
+        <span class="bar-name">${c.label}<span class="ko">${CLASS_KO[c.label]||''}</span></span>
+        <span class="bar-pct mono">${pct(c.confidence)}</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(c.confidence*100).toFixed(1)}%"></div></div>
+    </div>`).join("");
+
+  resultEl.innerHTML = `
+    <div class="metric">
+      <p class="metric-label">가장 유력한 진단명</p>
+      <div class="metric-row">
+        <span class="metric-value">${top.label}</span>
+        <span class="metric-ko">${CLASS_KO[top.label]||''}</span>
+        <span class="metric-delta mono">${pct(top.confidence)}</span>
+      </div>
+    </div>
+    <p class="bars-label">상세 확률 분포</p>
+    ${bars}`;
+  postHeight();
+}
+
+function showStatus(html){
+  resultEl.innerHTML = `<div class="status">${html}</div>`;
+  postHeight();
+}
+
+function selectSample(i){
+  [...galleryEl.children].forEach((b,idx)=>b.classList.toggle("active", idx===i));
+  const s = SAMPLES[i];
+  previewImg.src = s.src;
+  previewCap.textContent = `sample ${i+1} · apple leaf`;
+  renderResult(s.conf);
+}
+
+// build gallery
+SAMPLES.forEach((s,i)=>{
+  const b = document.createElement("button");
+  b.className = "thumb" + (i===0?" active":"");
+  b.innerHTML = `<img src="${s.src}" alt="샘플 ${i+1}" loading="lazy" />`;
+  b.addEventListener("click", ()=>selectSample(i));
+  galleryEl.appendChild(b);
+});
+
+// live upload → HF API
+let client = null;
+$("file-input").addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  [...galleryEl.children].forEach(b=>b.classList.remove("active"));
+  previewImg.src = URL.createObjectURL(file);
+  previewCap.textContent = `uploaded · ${file.name}`;
+  showStatus(`<span class="spinner"></span> AI가 잎의 상태를 분석 중입니다…<br><span style="color:var(--tertiary);font-size:12px">모델이 슬립 상태면 최대 1분 소요</span>`);
+  try{
+    if(!client) client = await Client.connect(API);
+    const out = await client.predict("/predict", { image: file });
+    const data = out?.data?.[0];
+    if(data && Array.isArray(data.confidences)){
+      renderResult(data.confidences);
+    }else{
+      throw new Error("예상치 못한 응답 형식");
+    }
+  }catch(err){
+    resultEl.innerHTML = `<div class="err">⚠ 추론 서버 호출에 실패했습니다. 잠시 후 다시 시도하거나 아래 샘플로 확인해 주세요.<br><span style="color:var(--tertiary)">${(err&&err.message)||err}</span></div>`;
+    postHeight();
+  }
+});
+
+// ── iframe 높이 동기화 (부모 포트폴리오가 수신) ──
+let lastH = 0;
+function postHeight(){
+  const h = document.documentElement.scrollHeight;
+  if(h !== lastH){
+    lastH = h;
+    parent.postMessage({ type:"plant-demo-height", height:h }, "*");
+  }
+}
+window.addEventListener("load", postHeight);
+window.addEventListener("resize", postHeight);
+previewImg.addEventListener("load", postHeight);
+new ResizeObserver(postHeight).observe(document.body);
+
+// initial
+selectSample(0);
+</script>
+</body>
+</html>

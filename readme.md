@@ -1,6 +1,6 @@
 # Plant Pathology 2020 AI Diagnosis
 
-> **Deployment URL**: [https://kaggle-plant.streamlit.app/](https://kaggle-plant.streamlit.app/)
+> **Deployment URL**: [https://ingyoun-plant-pathology-demo.static.hf.space](https://ingyoun-plant-pathology-demo.static.hf.space)
 
 ## 1. 프로젝트 개요 (Project Overview)
 
@@ -86,7 +86,7 @@ $$
 *   **백엔드 (API Serving)**:
     *   `inference.py`: Hugging Face Spaces 환경에서 Gradio를 기반으로 구동되며, ONNX 모델을 로드하여 실제 추론을 수행하는 API 서버 역할을 합니다.
 *   **프론트엔드 (Dashboard)**:
-    *   `app.py`: Streamlit을 활용한 웹 인터페이스입니다. 사용자가 이미지를 업로드하면 백엔드 API와 통신하여 결과를 시각화합니다.
+    *   `static-demo/index.html`: **Hugging Face Static Space**에 배포되는 정적 웹 대시보드입니다. 5개 샘플 이미지는 사전 계산된 확률을 즉시 표시하고, 사용자가 직접 이미지를 업로드하면 백엔드 API와 통신하여 실시간으로 결과를 시각화합니다. (이전 `streamlit/app.py` Streamlit 대시보드를 대체)
 
 ---
 
@@ -103,7 +103,8 @@ my-project/
 │   ├── model.py      # ResNeSt 모델 및 손실 함수
 │   ├── runner.py     # 실험 실행 및 학습 루프 (ExperimentRunner)
 │   └── utils.py      # 유틸리티 함수 (Seed, Metrics)
-├── streamlit/        # app.py, inference.py 및 샘플 이미지
+├── static-demo/      # 정적 웹 데모 (HF Static Space, 현재 서비스)
+├── streamlit/        # (구) Streamlit 데모 — inference.py(API 백엔드) 포함
 ├── requirements.txt  # 의존성 목록
 └── README.md         # 프로젝트 문서
 ```
@@ -114,12 +115,12 @@ my-project/
 
 사용자가 웹 대시보드에 접속하여 진단을 수행하는 과정은 다음과 같습니다.
 
-1.  **이미지 업로드 (User Action)**: Streamlit 웹 인터페이스(`app.py`)를 통해 사용자가 식물 잎 이미지를 업로드합니다.
+1.  **이미지 선택/업로드 (User Action)**: 정적 웹 대시보드(`static-demo`)에서 샘플 잎을 선택하면 사전 계산된 결과가 즉시 표시되고, 직접 이미지를 업로드하면 백엔드로 전송됩니다.
 2.  **전처리 및 요청 (Preprocessing)**: 이미지를 모델 입력 크기에 맞게 리사이징 및 정규화(Normalization)한 후, 백엔드로 전송합니다.
 3.  **AI 추론 (Inference)**: `inference.py`에서 ONNX Runtime 세션을 통해 고속 추론을 수행합니다. 4가지 클래스에 대한 확률값을 계산합니다.
 4.  **결과 반환 및 시각화 (Visualization)**: 가장 높은 확률을 가진 상태를 진단 결과로 사용자 화면에 출력하며, 각 상태별 확신도(Confidence)를 그래프로 보여줍니다.
 
-![streamlit_app](image-1.png)
+![Plant Pathology static demo](static-demo/preview.jpg)
 
 ---
 
@@ -131,5 +132,5 @@ my-project/
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/PyTorch_Lightning-2.0+-792EE5?logo=pytorch-lightning&logoColor=white)](https://www.pytorchlightning.ai/)
 [![Model](https://img.shields.io/badge/Model-ResNeSt101-FF6F00?logo=pytorch&logoColor=white)]()
-[![Deployment](https://img.shields.io/badge/Streamlit-Cloud-FF4B4B?logo=streamlit&logoColor=white)](https://share.streamlit.io/)
+[![Deployment](https://img.shields.io/badge/Hugging_Face-Static_Space-FFD21E?logo=huggingface&logoColor=black)](https://ingyoun-plant-pathology-demo.static.hf.space)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)]()

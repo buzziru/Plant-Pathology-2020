@@ -149,9 +149,7 @@
 </div>
 
 <script type="module">
-import { Client } from "https://cdn.jsdelivr.net/npm/@gradio/client/+esm";
-
-const API = "https://ingyoun-plant-pathology-api.hf.space/";
+const API = "https://ingyoun-plant-pathology-api.hf.space";
 
 const CLASS_KO = {
   "Healthy": "건강",
@@ -235,8 +233,44 @@ SAMPLES.forEach((s,i)=>{
   galleryEl.appendChild(b);
 });
 
-// live upload → HF API
-let client = null;
+// live upload → HF Gradio REST API
+// @gradio/client는 /config를 credentials:'include'로 호출해 HF Space의 CORS(*)에
+// 막힘 → 자격증명 없는 수동 fetch 3단계(업로드→호출→SSE)로 직접 호출한다.
+async function runInference(file){
+  // 1) 파일 업로드
+  const fd = new FormData();
+  fd.append("files", file, file.name);
+  const up = await fetch(API + "/gradio_api/upload", { method:"POST", body:fd, credentials:"omit" });
+  if(!up.ok) throw new Error("업로드 실패 (" + up.status + ")");
+  const paths = await up.json();
+
+  // 2) 추론 호출 → event_id
+  const fileData = { path: paths[0], meta:{ _type:"gradio.FileData" }, orig_name: file.name, url: API + "/gradio_api/file=" + paths[0] };
+  const call = await fetch(API + "/gradio_api/call/predict", {
+    method:"POST", credentials:"omit",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ data:[fileData] }),
+  });
+  if(!call.ok) throw new Error("추론 요청 실패 (" + call.status + ")");
+  const { event_id } = await call.json();
+
+  // 3) 결과 수신(SSE) — event: complete 블록의 data 파싱
+  const ev = await fetch(API + "/gradio_api/call/predict/" + event_id, { credentials:"omit" });
+  if(!ev.ok) throw new Error("결과 수신 실패 (" + ev.status + ")");
+  const text = await ev.text();
+  let payload = null;
+  for(const block of text.split("\n\n")){
+    if(block.includes("event: error")) throw new Error("서버 추론 오류");
+    if(block.includes("event: complete")){
+      const m = block.match(/data: (.*)$/s);
+      if(m){ payload = JSON.parse(m[1]); break; }
+    }
+  }
+  const result = payload && payload[0];
+  if(!result || !Array.isArray(result.confidences)) throw new Error("예상치 못한 응답 형식");
+  return result.confidences;
+}
+
 $("file-input").addEventListener("change", async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -245,14 +279,8 @@ $("file-input").addEventListener("change", async (e)=>{
   previewCap.textContent = `uploaded · ${file.name}`;
   showStatus(`<span class="spinner"></span> AI가 잎의 상태를 분석 중입니다…<br><span style="color:var(--tertiary);font-size:12px">모델이 슬립 상태면 최대 1분 소요</span>`);
   try{
-    if(!client) client = await Client.connect(API);
-    const out = await client.predict("/predict", { image: file });
-    const data = out?.data?.[0];
-    if(data && Array.isArray(data.confidences)){
-      renderResult(data.confidences);
-    }else{
-      throw new Error("예상치 못한 응답 형식");
-    }
+    const conf = await runInference(file);
+    renderResult(conf);
   }catch(err){
     resultEl.innerHTML = `<div class="err">⚠ 추론 서버 호출에 실패했습니다. 잠시 후 다시 시도하거나 아래 샘플로 확인해 주세요.<br><span style="color:var(--tertiary)">${(err&&err.message)||err}</span></div>`;
     postHeight();

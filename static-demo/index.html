@@ -107,7 +107,7 @@
 <div class="demo">
   <div class="demo-header">
     <h1 class="demo-title">식물 잎 병해 진단</h1>
-    <p class="demo-sub">사과나무 잎 이미지를 4개 병해 클래스로 분류합니다. 아래 샘플을 누르면 즉시 결과가 표시되고,<br>직접 이미지를 올리면 ResNeSt101e 모델(ONNX)이 실시간으로 추론합니다 — 모델이 슬립 상태면 첫 호출에 최대 1분이 걸릴 수 있습니다.</p>
+    <p class="demo-sub">사과나무 잎 이미지를 4개 병해 클래스로 분류합니다. 아래 샘플을 누르면 즉시 결과가 표시되고, 직접 이미지를 올리면 ResNeSt101e 모델(ONNX)이 실시간으로 추론합니다. 모델이 슬립 상태면 첫 호출에 최대 1분이 걸릴 수 있습니다.</p>
   </div>
 
   <div class="grid">
@@ -137,7 +137,7 @@
   <p class="foot">
     <b>모델</b> ResNeSt101e, 이종 지식 증류(ConvNeXt→ResNeSt)<br />
     <b>데이터</b> Kaggle Plant Pathology 2020 (FGVC7)<br />
-    <b>성능</b> ROC-AUC 0.977<br />
+    <b>성능</b> private LB ROC-AUC 0.979(late submission)<br />
     샘플 결과는 사전 계산값이며, 업로드 추론은 Hugging Face Space에서 실행됩니다.
   </p>
 </div>
@@ -282,6 +282,9 @@ $("file-input").addEventListener("change", async (e)=>{
 });
 
 // ── iframe 높이 동기화 (부모 포트폴리오가 수신) ──
+// 임베드일 때는 안쪽 스크롤바를 막는다. 처음 낮은 iframe에서 스크롤바가 생기면 폭이 줄어
+// 3:2 미리보기가 낮아진 높이를 보내고, 스크롤바가 사라지면 다시 넘쳐 스크롤바가 남는다.
+if (window !== parent) document.documentElement.style.overflowY = "hidden";
 const demoEl = document.querySelector(".demo");
 let lastH = 0;
 function postHeight(){

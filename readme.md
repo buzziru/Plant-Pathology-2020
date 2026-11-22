@@ -1,8 +1,9 @@
-# Plant Pathology 2020 AI Diagnosis
+# 식물 잎 병해 진단
 
-> **Deployment URL**: [https://ingyoun-plant-pathology-demo.static.hf.space](https://ingyoun-plant-pathology-demo.static.hf.space)
+- 데모: https://ingyoun-plant-pathology-demo.static.hf.space
+- 포트폴리오: https://data-portfolio-rust.vercel.app/projects/plant
 
-## 1. 프로젝트 개요 (Project Overview)
+## 프로젝트 개요
 
 본 프로젝트는 **Kaggle Plant Pathology 2020** 경진대회의 데이터셋을 활용하여 사과나무 잎의 건강 상태를 진단하는 AI 서비스를 구축하는 것을 목표로 합니다. 컴퓨터 비전 기술을 통해 잎의 이미지를 분석하고, 다음 4가지 상태 중 하나로 정밀하게 분류합니다.
 
@@ -13,11 +14,9 @@
 
 단순한 모델 학습을 넘어, **ResNeSt** 아키텍처 도입과 **지식 증류(Knowledge Distillation)** 기법을 통해 성능을 극대화하였으며, **ONNX Runtime**으로 추론 속도를 최적화하여 실제 웹 서비스로 배포하는 Full-Stack AI 파이프라인을 구현하였습니다.
 
----
+## 기술적 핵심
 
-## 2. 기술적 핵심 (Technical Core)
-
-### 2.1 Model Architecture: ResNeSt (Split-Attention Networks)
+### 모델 구조: ResNeSt
 
 본 프로젝트에서는 기본 ResNet 대신 **ResNeSt**를 백본으로 채택하였습니다. ResNeSt는 **Split-Attention Block**이라는 새로운 모듈을 도입하여 이미지의 채널 간 상호의존성을 효과적으로 모델링하는 아키텍처입니다.
 
@@ -26,7 +25,7 @@
 
 이러한 구조적 특징 덕분에 ResNeSt는 동일한 파라미터 수 대비 더 높은 정확도와 강건성(Robustness)을 제공하므로, 미세한 병변 구분이 필요한 식물 병리학 진단에 최적이라 판단하였습니다.
 
-### 2.2 Training Strategy: Knowledge Distillation
+### 학습 전략: 지식 증류
 
 모델의 일반화 성능을 높이고 과적합을 방지하기 위해 **지식 증류(Knowledge Distillation)** 전략을 적용하였습니다. 이는 크고 강력한 Teacher 모델의 지식(Dark Knowledge)을 경량화된 Student 모델(ResNeSt)에 전이하는 과정입니다.
 
@@ -46,7 +45,7 @@ $$
 
 > **Performance Boost**: 특히 본 프로젝트에서는 **ConvNeXt**를 Teacher 모델로, **ResNeSt**를 Student 모델로 설정하여 실험한 결과, 단일 모델 학습 대비 폭발적인 성능 향상을 확인하였습니다.
 
-### 2.3 Performance Improvement: 성능 개선 과정
+### 성능 개선 과정
 
 본 프로젝트는 단순한 아키텍처 변경이 아니라, 검증 전략과 데이터 정제, 지식 증류 방식, 모델 조합을 단계적으로 개선하며 성능을 끌어올렸습니다.
 
@@ -62,13 +61,11 @@ $$
 
 상세한 실험 과정과 의사결정은 [기술 블로그](https://velog.io/@masew8/캐글-Plant-Pathology-2020를-정리하며-지식-증류-전략)에 정리되어 있습니다.
 
-### 2.4 Optimization: ONNX Runtime
+### 추론 최적화: ONNX Runtime
 
 학습된 PyTorch 모델을 배포 단계에서 그대로 사용하지 않고, **ONNX** 포맷으로 변환하여 최적화를 수행하였습니다.
 
----
-
-## 3. 개발 워크플로우 및 주요 파일 (Development Workflow)
+## 개발 워크플로우 및 주요 파일
 
 전체 개발 과정은 실험, 모델 구성, 최적화, 그리고 서비스 배포의 단계로 구성되어 있습니다.
 
@@ -88,9 +85,7 @@ $$
 *   **프론트엔드 (Dashboard)**:
     *   `static-demo/index.html`: **Hugging Face Static Space**에 배포되는 정적 웹 대시보드입니다. 5개 샘플 이미지는 사전 계산된 확률을 즉시 표시하고, 사용자가 직접 이미지를 업로드하면 백엔드 API와 통신하여 실시간으로 결과를 시각화합니다. (이전 `streamlit/app.py` Streamlit 대시보드를 대체)
 
----
-
-## 4. 프로젝트 구조 (Project Structure)
+## 저장소 구조
 
 ```
 my-project/
@@ -109,9 +104,7 @@ my-project/
 └── README.md         # 프로젝트 문서
 ```
 
----
-
-## 5. 서비스 작동 흐름 (Service Flow)
+## 서비스 작동 흐름
 
 사용자가 웹 대시보드에 접속하여 진단을 수행하는 과정은 다음과 같습니다.
 
@@ -122,15 +115,17 @@ my-project/
 
 ![Plant Pathology static demo](static-demo/preview.jpg)
 
----
+## 환경
 
-## 참고 자료 (References)
+- Python 3.12 · PyTorch Lightning 2.0+ · ResNeSt101
+- 배포: Hugging Face Static Space
+
+## 참고 자료
 
 *   **Technical Blog**: [캐글 Plant Pathology 2020를 정리하며: 지식 증류 전략](https://velog.io/@masew8/캐글-Plant-Pathology-2020를-정리하며-지식-증류-전략)
 *   **Dataset**: Kaggle Plant Pathology 2020 - FGVC7
 
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Framework](https://img.shields.io/badge/PyTorch_Lightning-2.0+-792EE5?logo=pytorch-lightning&logoColor=white)](https://www.pytorchlightning.ai/)
-[![Model](https://img.shields.io/badge/Model-ResNeSt101-FF6F00?logo=pytorch&logoColor=white)]()
-[![Deployment](https://img.shields.io/badge/Hugging_Face-Static_Space-FFD21E?logo=huggingface&logoColor=black)](https://ingyoun-plant-pathology-demo.static.hf.space)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)]()
+
+## 라이선스
+
+MIT
